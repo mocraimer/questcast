@@ -48,7 +48,7 @@ Set these as environment variables before running, or pass the headset IP as the
 
 ## Audio
 
-Audio is on by default. scrcpy is set to send the game sound from the headset to your PC, and the `QuestCast Audio` source in the OBS scene (an Application Audio Capture) takes it from `scrcpy.exe`. Read the test results below first. For video only, run:
+Audio is on by default. scrcpy is set to send the game sound from the headset to your PC, and the `QuestCast Audio` source in the OBS scene (an Application Audio Capture) takes it from `scrcpy.exe`. For video only, run:
 
 ```
 set "AUDIO=0" & questcast.bat
@@ -56,16 +56,18 @@ set "AUDIO=0" & questcast.bat
 
 Use Command Prompt for this. The variable stays set in that window until you close it or run `set "AUDIO="`.
 
-**Audio does not work on the Quest 3 I tested.** I tried a Quest 3 (Android 14) with scrcpy 4.1 over USB, while the Quest home, a browser tone and a game were playing:
+**Audio is captured only from apps that allow it.** I tested a Quest 3 (Android 14) with scrcpy 4.1 over USB:
 
-- With the default flags, scrcpy starts with no error and records an audio track, but the track is silent.
+- Oculus Browser playing music: the default flags captured it (RMS about -20 dB).
+- One game (`DragonFistVR`): the track was silent, with no error. Android lets apps opt out of playback capture, and that game's package has no opt-in flag (target SDK 32). I tested only this one game, so other games may differ.
 - `--audio-source=output` fails with `Cannot create AudioRecord`.
+- `--audio-source=playback` without `--audio-dup` failed once with `registerAudioPolicy() returned -1`. Keep `--audio-dup` in `AUDIO_ARGS`.
 
-I do not know why. scrcpy says apps can opt out of `playback` capture. Other Quests may differ: in [scrcpy issue #4354](https://github.com/Genymobile/scrcpy/issues/4354), a Quest 3 on Android 12 also got no audio, and a scrcpy contributor says Quest OS sends all audio to an internal device when no headphones are connected. I have not tested the OBS scene with a headset.
+In [scrcpy issue #4354](https://github.com/Genymobile/scrcpy/issues/4354), a Quest 3 on Android 12 got no audio, and a scrcpy contributor says Quest OS sends all audio to an internal device when no headphones are connected. I have not tested the OBS scene with a headset.
 
 If audio capture fails, the video keeps running, because scrcpy falls back to video only ([scrcpy audio docs](https://github.com/Genymobile/scrcpy/blob/master/doc/audio.md)). A silent track does not stop the video either.
 
-The default `--audio-source=playback --audio-dup` keeps the sound in the headset too. scrcpy needs Android 13 or later for both flags. Set `AUDIO_ARGS` to change the flags, for example `set "AUDIO_ARGS=--audio-source=playback" & questcast.bat`.
+The default `--audio-source=playback --audio-dup` keeps the sound in the headset too. scrcpy needs Android 13 or later for both flags. `AUDIO_ARGS` replaces the whole flag list.
 
 ## About the crop
 
@@ -83,7 +85,7 @@ Quest 2, Quest Pro and Quest 3S have different eye sizes. I have not tested them
 ## Limits
 
 - The picture is the raw left-eye view, not a flattened one. Wide scenes look slightly curved.
-- Audio is silent on the Quest 3 I tested. See [Audio](#audio).
+- scrcpy captures audio only from apps that allow it, and some games do not. See [Audio](#audio).
 - The cast shares your Wi-Fi with anything else the headset streams. Do not run it at full quality while playing PC VR over Wi-Fi.
 - It uses the headset's hardware H.264 encoder, which adds some load on the headset.
 
@@ -96,7 +98,7 @@ Quest 2, Quest Pro and Quest 3S have different eye sizes. I have not tested them
 | "No headset found over USB" | Plug in the cable, accept the prompt in the headset, run again |
 | Cannot connect | PC and headset must be on the same network (some routers isolate Wi-Fi devices) |
 | Stutter | Lower `BITRATE` or `FPS` |
-| No sound in OBS | Expected on the Quest 3 I tested (see [Audio](#audio)). Check that the audio source targets `QuestCast:SDL_app:scrcpy.exe`. `--audio-source=output` fails on that headset. In issue #4354, plugging in headphones sent audio to the PC. I have not tested that. |
+| No sound in OBS | The app may not allow capture: one game I tested was silent while Oculus Browser worked (see [Audio](#audio)). Check that the audio source targets `QuestCast:SDL_app:scrcpy.exe`. `--audio-source=output` fails on the Quest 3 I tested. |
 | scrcpy stops at start with an audio error | Set `AUDIO=0`. If scrcpy exits instead of falling back to video only, an older Android or scrcpy may be the cause. I do not know. |
 
 ## License
