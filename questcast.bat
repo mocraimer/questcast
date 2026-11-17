@@ -3,6 +3,7 @@ rem QuestCast - show a Meta Quest's view in a window over Wi-Fi so OBS can captu
 rem Usage: questcast.bat [headset-ip]
 rem Override any setting below by setting an environment variable first, e.g.
 rem   set CROP=1600:900:420:700 & questcast.bat
+rem Audio is on by default. For video only: set "AUDIO=0" & questcast.bat
 setlocal
 
 if not defined ADB set "ADB=adb"
@@ -12,6 +13,12 @@ if not defined CROP set "CROP=1600:900:420:700"
 if not defined BITRATE set "BITRATE=20M"
 if not defined FPS set "FPS=60"
 if not defined TITLE set "TITLE=QuestCast"
+if not defined AUDIO set "AUDIO=1"
+if not defined AUDIO_ARGS set "AUDIO_ARGS=--audio-source=playback --audio-dup"
+rem "set AUDIO=0 & ..." leaves a trailing space in the value, so drop spaces before comparing.
+set "AUDIO=%AUDIO: =%"
+set "AUDIO_OPT=%AUDIO_ARGS%"
+if "%AUDIO%"=="0" set "AUDIO_OPT=--no-audio"
 set "IPFILE=%~dp0questcast.ip"
 
 set "QUEST=%~1"
@@ -49,7 +56,7 @@ if errorlevel 1 (
 
 :run
 echo Casting %QUEST%:%PORT% - close the "%TITLE%" window to stop.
-"%SCRCPY%" -s %QUEST%:%PORT% --crop=%CROP% --video-bit-rate=%BITRATE% --max-fps=%FPS% --no-audio --no-control --window-title=%TITLE%
+"%SCRCPY%" -s %QUEST%:%PORT% --crop=%CROP% --video-bit-rate=%BITRATE% --max-fps=%FPS% %AUDIO_OPT% --no-control --window-title=%TITLE%
 exit /b %errorlevel%
 
 :try_connect
